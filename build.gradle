@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+}
+
+group 'Notification Sender'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.1'
+}
+
+sourceSets {
+    main {
+        java.srcDirs = ['src\\main\\java']
+    }
+
+    test {
+        java.srcDirs = ['src\\test\\java']
+    }
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'okon.ns.App'
+    }
+    doFirst {
+        from { configurations.runtime.collect { it.isDirectory() ? it : zipTree(it) } }
+    }
+}

@@ -12,11 +12,16 @@ public class AppConfigReader {
         Properties result = new Properties();
         try {
             result.load(new FileInputStream(file));
-            validateLogFile(result);
+            validate(result);
         } catch (Exception e) {
             throw new ConfigurationException(e.getMessage());
         }
         return result;
+    }
+
+    public static void validate(Properties properties) {
+        validateLogFile(properties);
+        validateLogFileSize(properties);
     }
 
     public static void validateLogFile(Properties properties) {
@@ -25,11 +30,34 @@ public class AppConfigReader {
         }
     }
 
+    public static void validateLogFileSize(Properties properties) {
+        if (properties.containsKey("LogFileSize") && (isWrongFormat(properties, "LogFileSize")
+                || isOutOfRange(properties, "LogFileSize"))) {
+            System.exit(102);
+        }
+    }
+
     public static boolean isWrongFormat(Properties properties, String key) {
         if (key.equals("LogFile")) {
             try {
                 new File(properties.getProperty(key)).getCanonicalPath();
             } catch (IOException e) {
+                return true;
+            }
+        } else if (key.equals("LogFileSize")) {
+            try {
+                Integer.parseInt(properties.getProperty(key));
+            } catch (NumberFormatException e) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isOutOfRange(Properties properties, String key) {
+        if (key.equals("LogFileSize")) {
+            if (Integer.valueOf(properties.getProperty("LogFileSize")).intValue() < 0
+                    || Integer.valueOf(properties.getProperty("LogFileSize")).intValue() > 128) {
                 return true;
             }
         }

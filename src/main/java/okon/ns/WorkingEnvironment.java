@@ -11,6 +11,9 @@ public class WorkingEnvironment {
         if (parameters.containsKey("LogFile")) {
             environment.setProperty("LogFile", parameters.getProperty("LogFile"));
         }
+        if (parameters.containsKey("LogFileSize")) {
+            environment.setProperty("LogFileSize", parameters.getProperty("LogFileSize"));
+        }
         environment.setProperty("AppName", checkJarFileName());
         environment.setProperty("HostName", checkHostName());
     }
@@ -35,11 +38,11 @@ public class WorkingEnvironment {
         return environment.getProperty("LogFile", "./" + getAppName() + ".log");
     }
 
+    public static String getLogFileSize() { return environment.getProperty("LogFileSize", "1"); }
+
     public static String getAppName() {
         return environment.getProperty("AppName");
     }
 
-    public static String getHostName() {
-        return environment.getProperty("HostName");
-    }
+    public static String getHostName() { return environment.getProperty("HostName"); }
 }

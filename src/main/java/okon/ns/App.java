@@ -1,5 +1,13 @@
 package okon.ns;
 
+import microsoft.exchange.webservices.data.core.ExchangeService;
+import microsoft.exchange.webservices.data.core.enumeration.property.BodyType;
+import microsoft.exchange.webservices.data.core.enumeration.property.WellKnownFolderName;
+import microsoft.exchange.webservices.data.core.service.folder.Folder;
+import microsoft.exchange.webservices.data.core.service.item.EmailMessage;
+import microsoft.exchange.webservices.data.credential.ExchangeCredentials;
+import microsoft.exchange.webservices.data.credential.WebCredentials;
+import microsoft.exchange.webservices.data.property.complex.MessageBody;
 import okon.ns.config.AppConfigReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -8,6 +16,7 @@ import org.apache.logging.log4j.core.config.builder.api.*;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 
 import java.io.File;
+import java.net.URI;
 import java.util.Properties;
 
 public class App {
@@ -22,7 +31,50 @@ public class App {
     }
 
     public static void main(String[] args) {
+        try {
+            while (true) {
+                connectViaExchangeManually("xxxx", "xxxx");
+                Thread.sleep(600000);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
+    public static void connectViaExchangeManually(String email, String password)
+            throws Exception {
+        ExchangeService service = new ExchangeService();
+        ExchangeCredentials credentials = new WebCredentials(email, password);
+        service.setUrl(new URI("xxxx"));
+        service.setCredentials(credentials);
+        service.setTraceEnabled(true);
+        Folder inbox = Folder.bind(service, WellKnownFolderName.Inbox);
+
+        int unreaded = inbox.getUnreadCount();
+        if (unreaded > 0) {
+            doSend(service, "nowe wiadomości e-mail", "xxxx", null, "Nowe wiadomości: " + unreaded, null);
+        }
+    }
+
+    public static void doSend (ExchangeService service, String subject, String to, String[]cc, String bodyText,
+                               String[]attachmentPath) throws Exception {
+        EmailMessage msg = new EmailMessage(service);
+        msg.setSubject(subject);
+        MessageBody body = MessageBody.getMessageBodyFromText(bodyText);
+        body.setBodyType(BodyType.HTML);
+        msg.setBody(body);
+        msg.getToRecipients().add(to);
+        if (cc != null) {
+            for (String s : cc) {
+                msg.getCcRecipients().add(s);
+            }
+        }
+        if (attachmentPath != null && attachmentPath.length > 0) {
+            for (int a = 0; a < attachmentPath.length; a++) {
+                msg.getAttachments().addFileAttachment(attachmentPath[a]);
+            }
+        }
+        msg.send();
     }
 
     private static void initLogger() {

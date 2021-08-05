@@ -22,6 +22,7 @@ public class AppConfigReader {
     public static void validate(Properties properties) {
         validateLogFile(properties);
         validateLogFileSize(properties);
+        validateEmailAddress(properties);
     }
 
     public static void validateLogFile(Properties properties) {
@@ -34,6 +35,12 @@ public class AppConfigReader {
         if (properties.containsKey("LogFileSize") && (isWrongFormat(properties, "LogFileSize")
                 || isOutOfRange(properties, "LogFileSize"))) {
             System.exit(102);
+        }
+    }
+
+    public static void validateEmailAddress(Properties properties) {
+        if (properties.containsKey("EmailAddress") && isWrongFormat(properties, "EmailAddress")) {
+            System.exit(103);
         }
     }
 
@@ -50,6 +57,8 @@ public class AppConfigReader {
             } catch (NumberFormatException e) {
                 return true;
             }
+        } else if (key.equals("EmailAddress")) {
+            if (!properties.getProperty(key).contains("@") || properties.getProperty(key).length() < 6) return true;
         }
         return false;
     }

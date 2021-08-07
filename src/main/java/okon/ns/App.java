@@ -33,7 +33,7 @@ public class App {
     public static void main(String[] args) {
         try {
             while (true) {
-                connectViaExchangeManually(WorkingEnvironment.getEmailAddress(), "xxxx");
+                connectViaExchangeManually(WorkingEnvironment.getEmailAddress(), WorkingEnvironment.getPassword());
                 Thread.sleep(600000);
             }
         } catch (Exception e) {

@@ -23,6 +23,7 @@ public class AppConfigReader {
         validateLogFile(properties);
         validateLogFileSize(properties);
         validateEmailAddress(properties);
+        validatePassword(properties);
     }
 
     public static void validateLogFile(Properties properties) {
@@ -39,8 +40,14 @@ public class AppConfigReader {
     }
 
     public static void validateEmailAddress(Properties properties) {
-        if (properties.containsKey("EmailAddress") && isWrongFormat(properties, "EmailAddress")) {
+        if (!properties.containsKey("EmailAddress") || isWrongFormat(properties, "EmailAddress")) {
             System.exit(103);
+        }
+    }
+
+    public static void validatePassword(Properties properties) {
+        if (!properties.containsKey("Password") || properties.getProperty("Password").equals("")) {
+            System.exit(104);
         }
     }
 

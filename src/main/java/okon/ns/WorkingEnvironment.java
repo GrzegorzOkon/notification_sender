@@ -17,6 +17,9 @@ public class WorkingEnvironment {
         if (parameters.containsKey("EmailAddress")) {
             environment.setProperty("EmailAddress", parameters.getProperty("EmailAddress"));
         }
+        if (parameters.containsKey("Password")) {
+            environment.setProperty("Password", parameters.getProperty("Password"));
+        }
         environment.setProperty("AppName", checkJarFileName());
         environment.setProperty("HostName", checkHostName());
     }
@@ -44,6 +47,8 @@ public class WorkingEnvironment {
     public static String getLogFileSize() { return environment.getProperty("LogFileSize", "1"); }
 
     public static String getEmailAddress() { return environment.getProperty("EmailAddress"); }
+
+    public static String getPassword() { return environment.getProperty("Password"); }
 
     public static String getAppName() {
         return environment.getProperty("AppName");

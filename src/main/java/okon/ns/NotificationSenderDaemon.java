@@ -9,6 +9,7 @@ import microsoft.exchange.webservices.data.credential.ExchangeCredentials;
 import microsoft.exchange.webservices.data.credential.WebCredentials;
 import microsoft.exchange.webservices.data.property.complex.MessageBody;
 import okon.ns.config.AppConfigReader;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -19,20 +20,44 @@ import java.io.File;
 import java.net.URI;
 import java.util.Properties;
 
-public class App {
-    private static final Logger logger = LogManager.getLogger(App.class);
-
-    static {
-        Properties properties = AppConfigReader.loadProperties((new File("./settings/program.properties")));
-        WorkingEnvironment.setEnvironment(properties);
-        App.initLogger();
-        logger.error("Starting " + Version.getVersionInfo() + " [" + WorkingEnvironment.getHostName() + "]");
-        logger.error("using configuration file: './settings/program.properties'");
-    }
+public class NotificationSenderDaemon {
+    private static final Logger logger = LogManager.getLogger(NotificationSenderDaemon.class);
+    private static NotificationSenderDaemon notificationSenderInstance = new NotificationSenderDaemon();
 
     public static void main(String[] args) {
+        String cmd = "start";
+        if (args.length > 0) {
+            cmd = args[0];
+
+            System.out.println("Service called with param: " + cmd);
+        }
+
+        if ("start".equals(cmd)) {
+            notificationSenderInstance.windowsStart();
+        } else {
+            notificationSenderInstance.windowsStop();
+        }
+    }
+
+    public static void windowsService(String args[]) {
+        String cmd = "start";
+        if (args.length > 0) {
+            cmd = args[0];
+        }
+
+        if ("start".equals(cmd)) {
+            notificationSenderInstance.windowsStart();
+        }
+        else {
+            notificationSenderInstance.windowsStop();
+        }
+    }
+
+    public void windowsStart() {
         try {
+            init();
             while (true) {
+                logger.error("Checking for new email");
                 connectViaExchangeManually(WorkingEnvironment.getEmailAddress(), WorkingEnvironment.getPassword());
                 Thread.sleep(600000);
             }
@@ -41,18 +66,27 @@ public class App {
         }
     }
 
-    public static void connectViaExchangeManually(String email, String password)
-            throws Exception {
+    public void windowsStop() {}
+
+    public void init() throws Exception {
+        Properties properties = AppConfigReader.loadProperties((new File("./settings/program.properties")));
+        WorkingEnvironment.setEnvironment(properties);
+        NotificationSenderDaemon.initLogger();
+        logger.info("Starting " + Version.getVersionInfo() + " [" + WorkingEnvironment.getHostName() + "]");
+        logger.info("using configuration file: './settings/program.properties'");
+    }
+
+    public static void connectViaExchangeManually(String email, String password) throws Exception {
         ExchangeService service = new ExchangeService();
         ExchangeCredentials credentials = new WebCredentials(email, password);
-        service.setUrl(new URI("xxxx"));
+        service.setUrl(new URI("xxx"));
         service.setCredentials(credentials);
         service.setTraceEnabled(true);
         Folder inbox = Folder.bind(service, WellKnownFolderName.Inbox);
 
         int unreaded = inbox.getUnreadCount();
         if (unreaded > 0) {
-            doSend(service, "nowe wiadomości e-mail", "xxxx", null, "Nowe wiadomości: " + unreaded, null);
+            doSend(service, "nowe wiadomości e-mail", "yyy", null, "Nowe wiadomości: " + unreaded, null);
         }
     }
 
@@ -91,7 +125,7 @@ public class App {
                             .addAttribute("size", WorkingEnvironment.getLogFileSize() + "MB"));
             appenderBuilder.addComponent(triggeringPolicy);
             builder.add(appenderBuilder);
-            RootLoggerComponentBuilder rootLogger = builder.newRootLogger();
+            RootLoggerComponentBuilder rootLogger = builder.newRootLogger(Level.values()[WorkingEnvironment.getDebugLevel()]);
             rootLogger.add(builder.newAppenderRef("LogToRollingFile"));
             builder.add(rootLogger);
         } else {
@@ -99,7 +133,7 @@ public class App {
                     .addAttribute("fileName", WorkingEnvironment.getLogFile())
                     .add(layoutBuilder);
             builder.add(appenderBuilder);
-            RootLoggerComponentBuilder rootLogger = builder.newRootLogger();
+            RootLoggerComponentBuilder rootLogger = builder.newRootLogger(Level.values()[WorkingEnvironment.getDebugLevel()]);
             rootLogger.add(builder.newAppenderRef("LogToFile"));
             builder.add(rootLogger);
         }

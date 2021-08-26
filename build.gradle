@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'Notification Sender'
-version '1.0-SNAPSHOT'
+version ''
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -16,6 +16,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'lib')
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.1'
     compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.1'
+    //implementation group: 'commons-daemon', name: 'commons-daemon', version: '1.2.4'
     implementation group: 'com.microsoft.ews-java-api', name: 'ews-java-api', version: '2.0'
 }
 
@@ -31,7 +32,7 @@ sourceSets {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'okon.ns.App'
+        attributes 'Main-Class': 'okon.ns.NotificationSenderDaemon'
     }
     doFirst {
         from { configurations.runtime.collect { it.isDirectory() ? it : zipTree(it) } }

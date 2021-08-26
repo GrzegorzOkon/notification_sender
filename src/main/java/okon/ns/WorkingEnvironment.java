@@ -14,6 +14,9 @@ public class WorkingEnvironment {
         if (parameters.containsKey("LogFileSize")) {
             environment.setProperty("LogFileSize", parameters.getProperty("LogFileSize"));
         }
+        if (parameters.containsKey("DebugLevel")) {
+            environment.setProperty("DebugLevel", parameters.getProperty("DebugLevel"));
+        }
         if (parameters.containsKey("EmailAddress")) {
             environment.setProperty("EmailAddress", parameters.getProperty("EmailAddress"));
         }
@@ -25,7 +28,7 @@ public class WorkingEnvironment {
     }
 
     private static String checkJarFileName() {
-        String path = App.class.getResource(App.class.getSimpleName() + ".class").getFile();
+        String path = NotificationSenderDaemon.class.getResource(NotificationSenderDaemon.class.getSimpleName() + ".class").getFile();
         path = path.substring(0, path.lastIndexOf('!'));
         path = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf('.'));
         return path;
@@ -45,6 +48,8 @@ public class WorkingEnvironment {
     }
 
     public static String getLogFileSize() { return environment.getProperty("LogFileSize", "1"); }
+
+    public static Integer getDebugLevel() { return Integer.valueOf(environment.getProperty("DebugLevel", "3")); }
 
     public static String getEmailAddress() { return environment.getProperty("EmailAddress"); }
 

@@ -22,6 +22,7 @@ public class AppConfigReader {
     public static void validate(Properties properties) {
         validateLogFile(properties);
         validateLogFileSize(properties);
+        validateDebugLevel(properties);
         validateEmailAddress(properties);
         validatePassword(properties);
     }
@@ -39,15 +40,22 @@ public class AppConfigReader {
         }
     }
 
+    public static void validateDebugLevel(Properties properties) {
+        if (properties.containsKey("DebugLevel") && (isWrongFormat(properties, "DebugLevel")
+                || isOutOfRange(properties, "DebugLevel"))) {
+            System.exit(103);
+        }
+    }
+
     public static void validateEmailAddress(Properties properties) {
         if (!properties.containsKey("EmailAddress") || isWrongFormat(properties, "EmailAddress")) {
-            System.exit(103);
+            System.exit(104);
         }
     }
 
     public static void validatePassword(Properties properties) {
         if (!properties.containsKey("Password") || properties.getProperty("Password").equals("")) {
-            System.exit(104);
+            System.exit(105);
         }
     }
 
@@ -58,14 +66,15 @@ public class AppConfigReader {
             } catch (IOException e) {
                 return true;
             }
-        } else if (key.equals("LogFileSize")) {
+        } else if (key.equals("LogFileSize") || key.equals("DebugLevel")) {
             try {
                 Integer.parseInt(properties.getProperty(key));
             } catch (NumberFormatException e) {
                 return true;
             }
         } else if (key.equals("EmailAddress")) {
-            if (!properties.getProperty(key).contains("@") || properties.getProperty(key).length() < 6) return true;
+            if (!properties.getProperty(key).contains("@") || properties.getProperty(key).length() < 6)
+                return true;
         }
         return false;
     }

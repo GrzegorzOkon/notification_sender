@@ -86,7 +86,7 @@ public class NotificationSenderDaemon {
 
         int unreaded = inbox.getUnreadCount();
         if (unreaded > 0) {
-            doSend(service, "nowe wiadomości e-mail", "yyy", null, "Nowe wiadomości: " + unreaded, null);
+            doSend(service, "nowe wiadomości e-mail", WorkingEnvironment.getTargetEmailAddress(), null, "Nowe wiadomości: " + unreaded, null);
         }
     }
 

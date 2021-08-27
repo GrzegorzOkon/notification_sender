@@ -25,6 +25,7 @@ public class AppConfigReader {
         validateDebugLevel(properties);
         validateEmailAddress(properties);
         validatePassword(properties);
+        validateTargetEmailAddress(properties);
     }
 
     public static void validateLogFile(Properties properties) {
@@ -59,6 +60,12 @@ public class AppConfigReader {
         }
     }
 
+    public static void validateTargetEmailAddress(Properties properties) {
+        if (!properties.containsKey("TargetEmailAddress") || isWrongFormat(properties, "TargetEmailAddress")) {
+            System.exit(106);
+        }
+    }
+
     public static boolean isWrongFormat(Properties properties, String key) {
         if (key.equals("LogFile")) {
             try {
@@ -72,7 +79,7 @@ public class AppConfigReader {
             } catch (NumberFormatException e) {
                 return true;
             }
-        } else if (key.equals("EmailAddress")) {
+        } else if (key.equals("EmailAddress") || key.equals("TargetEmailAddress")) {
             if (!properties.getProperty(key).contains("@") || properties.getProperty(key).length() < 6)
                 return true;
         }

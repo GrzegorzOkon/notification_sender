@@ -4,8 +4,8 @@ public class Version {
     private static String name = WorkingEnvironment.getAppName();
     private static int major = 1;
     private static int minor = 0;
-    private static int realase = 5;
-    private static String revision = "25 August 2021";
+    private static int realase = 6;
+    private static String revision = "26 August 2021";
     private static String author = "Grzegorz Okon";
     private static String license = "GPLv2. This is free software.";
 

@@ -20,9 +20,9 @@ import java.io.File;
 import java.net.URI;
 import java.util.Properties;
 
-public class NotificationSenderDaemon {
-    private static final Logger logger = LogManager.getLogger(NotificationSenderDaemon.class);
-    private static NotificationSenderDaemon notificationSenderInstance = new NotificationSenderDaemon();
+public class NotificationSender {
+    private static final Logger logger = LogManager.getLogger(NotificationSender.class);
+    private static NotificationSender notificationSenderInstance = new NotificationSender();
 
     public static void main(String[] args) {
         String cmd = "start";
@@ -57,8 +57,8 @@ public class NotificationSenderDaemon {
         try {
             init();
             while (true) {
-                logger.error("Checking for new email");
-                connectViaExchangeManually(WorkingEnvironment.getEmailAddress(), WorkingEnvironment.getPassword());
+                logger.debug("Checking for new email");
+                connectViaExchangeManually(WorkingEnvironment.getEmail(), WorkingEnvironment.getPassword());
                 Thread.sleep(600000);
             }
         } catch (Exception e) {
@@ -71,7 +71,7 @@ public class NotificationSenderDaemon {
     public void init() throws Exception {
         Properties properties = AppConfigReader.loadProperties((new File("./settings/program.properties")));
         WorkingEnvironment.setEnvironment(properties);
-        NotificationSenderDaemon.initLogger();
+        NotificationSender.initLogger();
         logger.info("Starting " + Version.getVersionInfo() + " [" + WorkingEnvironment.getHostName() + "]");
         logger.info("using configuration file: './settings/program.properties'");
     }
@@ -79,14 +79,14 @@ public class NotificationSenderDaemon {
     public static void connectViaExchangeManually(String email, String password) throws Exception {
         ExchangeService service = new ExchangeService();
         ExchangeCredentials credentials = new WebCredentials(email, password);
-        service.setUrl(new URI("xxx"));
+        service.setUrl(new URI(WorkingEnvironment.getServer()));
         service.setCredentials(credentials);
         service.setTraceEnabled(true);
         Folder inbox = Folder.bind(service, WellKnownFolderName.Inbox);
 
         int unreaded = inbox.getUnreadCount();
         if (unreaded > 0) {
-            doSend(service, "nowe wiadomości e-mail", WorkingEnvironment.getTargetEmailAddress(), null, "Nowe wiadomości: " + unreaded, null);
+            doSend(service, "nowe wiadomości e-mail", WorkingEnvironment.getTargetEmail(), null, "Nowe wiadomości: " + unreaded, null);
         }
     }
 

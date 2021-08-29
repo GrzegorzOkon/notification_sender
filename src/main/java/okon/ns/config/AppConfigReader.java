@@ -23,9 +23,10 @@ public class AppConfigReader {
         validateLogFile(properties);
         validateLogFileSize(properties);
         validateDebugLevel(properties);
-        validateEmailAddress(properties);
+        validateServer(properties);
+        validateEmail(properties);
         validatePassword(properties);
-        validateTargetEmailAddress(properties);
+        validateTargetEmail(properties);
     }
 
     public static void validateLogFile(Properties properties) {
@@ -48,21 +49,27 @@ public class AppConfigReader {
         }
     }
 
-    public static void validateEmailAddress(Properties properties) {
-        if (!properties.containsKey("EmailAddress") || isWrongFormat(properties, "EmailAddress")) {
+    public static void validateServer(Properties properties) {
+        if (!properties.containsKey("Server") || properties.getProperty("Server").equals("")) {
             System.exit(104);
+        }
+    }
+
+    public static void validateEmail(Properties properties) {
+        if (!properties.containsKey("Email") || isWrongFormat(properties, "Email")) {
+            System.exit(105);
         }
     }
 
     public static void validatePassword(Properties properties) {
         if (!properties.containsKey("Password") || properties.getProperty("Password").equals("")) {
-            System.exit(105);
+            System.exit(106);
         }
     }
 
-    public static void validateTargetEmailAddress(Properties properties) {
-        if (!properties.containsKey("TargetEmailAddress") || isWrongFormat(properties, "TargetEmailAddress")) {
-            System.exit(106);
+    public static void validateTargetEmail(Properties properties) {
+        if (!properties.containsKey("TargetEmail") || isWrongFormat(properties, "TargetEmail")) {
+            System.exit(107);
         }
     }
 
@@ -79,7 +86,7 @@ public class AppConfigReader {
             } catch (NumberFormatException e) {
                 return true;
             }
-        } else if (key.equals("EmailAddress") || key.equals("TargetEmailAddress")) {
+        } else if (key.equals("Email") || key.equals("TargetEmail")) {
             if (!properties.getProperty(key).contains("@") || properties.getProperty(key).length() < 6)
                 return true;
         }

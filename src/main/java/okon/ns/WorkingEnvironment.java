@@ -17,21 +17,24 @@ public class WorkingEnvironment {
         if (parameters.containsKey("DebugLevel")) {
             environment.setProperty("DebugLevel", parameters.getProperty("DebugLevel"));
         }
-        if (parameters.containsKey("EmailAddress")) {
-            environment.setProperty("EmailAddress", parameters.getProperty("EmailAddress"));
+        if (parameters.containsKey("Server")) {
+            environment.setProperty("Server", parameters.getProperty("Server"));
+        }
+        if (parameters.containsKey("Email")) {
+            environment.setProperty("Email", parameters.getProperty("Email"));
         }
         if (parameters.containsKey("Password")) {
             environment.setProperty("Password", parameters.getProperty("Password"));
         }
-        if (parameters.containsKey("TargetEmailAddress")) {
-            environment.setProperty("TargetEmailAddress", parameters.getProperty("TargetEmailAddress"));
+        if (parameters.containsKey("TargetEmail")) {
+            environment.setProperty("TargetEmail", parameters.getProperty("TargetEmail"));
         }
         environment.setProperty("AppName", checkJarFileName());
         environment.setProperty("HostName", checkHostName());
     }
 
     private static String checkJarFileName() {
-        String path = NotificationSenderDaemon.class.getResource(NotificationSenderDaemon.class.getSimpleName() + ".class").getFile();
+        String path = NotificationSender.class.getResource(NotificationSender.class.getSimpleName() + ".class").getFile();
         path = path.substring(0, path.lastIndexOf('!'));
         path = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf('.'));
         return path;
@@ -54,11 +57,13 @@ public class WorkingEnvironment {
 
     public static Integer getDebugLevel() { return Integer.valueOf(environment.getProperty("DebugLevel", "3")); }
 
-    public static String getEmailAddress() { return environment.getProperty("EmailAddress"); }
+    public static String getServer() { return environment.getProperty("Server"); }
+
+    public static String getEmail() { return environment.getProperty("Email"); }
 
     public static String getPassword() { return environment.getProperty("Password"); }
 
-    public static String getTargetEmailAddress() { return environment.getProperty("TargetEmailAddress"); }
+    public static String getTargetEmail() { return environment.getProperty("TargetEmail"); }
 
     public static String getAppName() {
         return environment.getProperty("AppName");

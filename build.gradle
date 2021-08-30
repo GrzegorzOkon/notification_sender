@@ -1,6 +1,31 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "edu.sc.seis.launch4j:launch4j:2.5.0"
+    }
+}
+
 plugins {
     id 'java'
+    id 'edu.sc.seis.launch4j' version '2.5.0'
 }
+
+launch4j {
+    outfile = 'notification-sender.exe'
+    mainClassName = 'okon.ns.NotificationSender'
+    productName = 'Notification Sender'
+}
+
+repositories {
+    mavenCentral()
+}
+
+apply plugin: 'java'
+apply plugin: 'edu.sc.seis.launch4j'
 
 group 'Notification Sender'
 version ''
@@ -8,9 +33,6 @@ version ''
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-repositories {
-    mavenCentral()
-}
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'lib')
@@ -38,3 +60,4 @@ jar {
         from { configurations.runtime.collect { it.isDirectory() ? it : zipTree(it) } }
     }
 }
+

@@ -57,8 +57,7 @@ public class NotificationSender {
         try {
             init();
             while (true) {
-                logger.debug("Checking for new email");
-                connectViaExchangeManually(WorkingEnvironment.getEmail(), WorkingEnvironment.getPassword());
+                getNewMessages();
                 Thread.sleep(600000);
             }
         } catch (Exception e) {
@@ -76,17 +75,23 @@ public class NotificationSender {
         logger.info("using configuration file: './settings/program.properties'");
     }
 
-    public static void connectViaExchangeManually(String email, String password) throws Exception {
-        ExchangeService service = new ExchangeService();
-        ExchangeCredentials credentials = new WebCredentials(email, password);
-        service.setUrl(new URI(WorkingEnvironment.getServer()));
-        service.setCredentials(credentials);
-        service.setTraceEnabled(true);
-        Folder inbox = Folder.bind(service, WellKnownFolderName.Inbox);
+    public static void getNewMessages() {
+        logger.info("In get_new_messages()");
+        try {
+            ExchangeService service = new ExchangeService();
+            ExchangeCredentials credentials = new WebCredentials(WorkingEnvironment.getEmail(), WorkingEnvironment.getPassword());
+            service.setUrl(new URI(WorkingEnvironment.getServer()));
+            service.setCredentials(credentials);
+            service.setTraceEnabled(true);
+            Folder inbox = Folder.bind(service, WellKnownFolderName.Inbox);
 
-        int unreaded = inbox.getUnreadCount();
-        if (unreaded > 0) {
-            doSend(service, "nowe wiadomości e-mail", WorkingEnvironment.getTargetEmail(), null, "Nowe wiadomości: " + unreaded, null);
+            int unreaded = inbox.getUnreadCount();
+            if (unreaded > 0) {
+                doSend(service, "nowe wiadomości e-mail", WorkingEnvironment.getTargetEmail(), null, "Nowe wiadomości: " + unreaded, null);
+            }
+            logger.info("End of get_new_messages():SUCCEED");
+        } catch (Exception e) {
+            logger.error("End of get_new_messages():FAILED");
         }
     }
 

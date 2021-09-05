@@ -10,15 +10,17 @@ import microsoft.exchange.webservices.data.credential.WebCredentials;
 import microsoft.exchange.webservices.data.property.complex.MessageBody;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.quartz.Job;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 
 import java.net.URI;
-import java.util.TimerTask;
 
-public class IncomingPostTask extends TimerTask {
-    private static final Logger logger = LogManager.getLogger(IncomingPostTask.class);
+public class NewPostCheckJob implements Job {
+    private static final Logger logger = LogManager.getLogger(NotificationSender.class);
 
     @Override
-    public void run() {
+    public void execute(JobExecutionContext jExeCtx) throws JobExecutionException {
         getNewMessages();
     }
 
@@ -43,7 +45,7 @@ public class IncomingPostTask extends TimerTask {
     }
 
     public static void doSend(ExchangeService service, String subject, String to, String[]cc, String bodyText,
-                               String[]attachmentPath) throws Exception {
+                              String[]attachmentPath) throws Exception {
         EmailMessage msg = new EmailMessage(service);
         msg.setSubject(subject);
         MessageBody body = MessageBody.getMessageBodyFromText(bodyText);

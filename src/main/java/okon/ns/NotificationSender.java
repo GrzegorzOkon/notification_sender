@@ -7,15 +7,16 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.builder.api.*;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
+import org.quartz.*;
+import org.quartz.impl.StdSchedulerFactory;
 
 import java.io.File;
 import java.util.Properties;
-import java.util.Timer;
 
 public class NotificationSender {
     private static final Logger logger = LogManager.getLogger(NotificationSender.class);
     private static NotificationSender notificationSenderInstance = new NotificationSender();
-    private static Timer incomingPostScheduler = new Timer("IncomingPostTimer");
+    private static Scheduler NewPostChecker;
 
     public static void main(String[] args) {
         String cmd = "start";
@@ -60,7 +61,7 @@ public class NotificationSender {
         Properties properties = AppConfigReader.loadProperties((new File("./settings/program.properties")));
         WorkingEnvironment.setEnvironment(properties);
         NotificationSender.initLogger();
-        incomingPostScheduler.schedule(new IncomingPostTask(), 3000, 600000);
+        NotificationSender.initScheduler();
         logger.info("Starting " + Version.getVersionInfo() + " [" + WorkingEnvironment.getHostName() + "]");
         logger.info("using configuration file: './settings/program.properties'");
     }
@@ -92,6 +93,25 @@ public class NotificationSender {
             builder.add(rootLogger);
         }
         Configurator.reconfigure(builder.build());
+    }
+
+    private static void initScheduler() throws Exception {
+        NewPostChecker = new StdSchedulerFactory().getScheduler();
+        NewPostChecker.start();
+        Trigger trigger =  createTrigger();
+        scheduleJob(trigger);
+    }
+
+    private static Trigger createTrigger() {
+        Trigger result = TriggerBuilder.newTrigger().withIdentity("CHECKING POST TRIGGER", "NEW POST CHECK")
+                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(600).repeatForever())
+                .build();
+        return result;
+    }
+
+    private static void scheduleJob(Trigger trigger) throws Exception {
+        JobDetail job = JobBuilder.newJob(NewPostCheckJob.class).withIdentity("EXCHANGE SERVER POST CHECKING", "EXCHANGE SERVER").build();
+        NewPostChecker.scheduleJob(job, trigger);
     }
 
     private static boolean isLogRotationEnabled() {

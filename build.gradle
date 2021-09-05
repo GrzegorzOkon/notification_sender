@@ -39,6 +39,7 @@ dependencies {
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.1'
     compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.1'
     //implementation group: 'commons-daemon', name: 'commons-daemon', version: '1.2.4'
+    implementation group: 'org.quartz-scheduler', name: 'quartz', version: '2.3.2'
     implementation group: 'com.microsoft.ews-java-api', name: 'ews-java-api', version: '2.0'
 }
 

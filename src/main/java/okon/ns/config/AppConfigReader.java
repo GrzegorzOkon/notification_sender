@@ -26,6 +26,7 @@ public class AppConfigReader {
         validateServer(properties);
         validateEmail(properties);
         validatePassword(properties);
+        validateCheckInterval(properties);
         validateTargetEmail(properties);
     }
 
@@ -67,9 +68,16 @@ public class AppConfigReader {
         }
     }
 
+    public static void validateCheckInterval(Properties properties) {
+        if (properties.containsKey("CheckInterval") && (isWrongFormat(properties, "CheckInterval")
+                || isOutOfRange(properties, "CheckInterval"))) {
+            System.exit(107);
+        }
+    }
+
     public static void validateTargetEmail(Properties properties) {
         if (!properties.containsKey("TargetEmail") || isWrongFormat(properties, "TargetEmail")) {
-            System.exit(107);
+            System.exit(108);
         }
     }
 
@@ -80,7 +88,7 @@ public class AppConfigReader {
             } catch (IOException e) {
                 return true;
             }
-        } else if (key.equals("LogFileSize") || key.equals("DebugLevel")) {
+        } else if (key.equals("LogFileSize") || key.equals("DebugLevel") || key.equals("CheckInterval")) {
             try {
                 Integer.parseInt(properties.getProperty(key));
             } catch (NumberFormatException e) {
@@ -94,11 +102,12 @@ public class AppConfigReader {
     }
 
     public static boolean isOutOfRange(Properties properties, String key) {
-        if (key.equals("LogFileSize")) {
-            if (Integer.valueOf(properties.getProperty("LogFileSize")).intValue() < 0
-                    || Integer.valueOf(properties.getProperty("LogFileSize")).intValue() > 128) {
+        if (key.equals("LogFileSize") && (Integer.valueOf(properties.getProperty("LogFileSize")).intValue() < 0
+                    || Integer.valueOf(properties.getProperty("LogFileSize")).intValue() > 128)) {
                 return true;
-            }
+        } else if (key.equals("CheckInterval") && (Integer.valueOf(properties.getProperty("CheckInterval")).intValue() < 10
+                || Integer.valueOf(properties.getProperty("CheckInterval")).intValue() > 120)) {
+                return true;
         }
         return false;
     }

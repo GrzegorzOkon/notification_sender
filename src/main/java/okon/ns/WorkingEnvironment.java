@@ -26,6 +26,9 @@ public class WorkingEnvironment {
         if (parameters.containsKey("Password")) {
             environment.setProperty("Password", parameters.getProperty("Password"));
         }
+        if (parameters.containsKey("CheckInterval")) {
+            environment.setProperty("CheckInterval", parameters.getProperty("CheckInterval"));
+        }
         if (parameters.containsKey("TargetEmail")) {
             environment.setProperty("TargetEmail", parameters.getProperty("TargetEmail"));
         }
@@ -62,6 +65,8 @@ public class WorkingEnvironment {
     public static String getEmail() { return environment.getProperty("Email"); }
 
     public static String getPassword() { return environment.getProperty("Password"); }
+
+    public static String getCheckInterval() { return environment.getProperty("CheckInterval", "10"); }
 
     public static String getTargetEmail() { return environment.getProperty("TargetEmail"); }
 

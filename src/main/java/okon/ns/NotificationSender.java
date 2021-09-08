@@ -104,7 +104,7 @@ public class NotificationSender {
 
     private static Trigger createTrigger() {
         Trigger result = TriggerBuilder.newTrigger().withIdentity("CHECKING POST TRIGGER", "NEW POST CHECK")
-                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(600).repeatForever())
+                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(Integer.valueOf(WorkingEnvironment.getCheckInterval())).repeatForever())
                 .build();
         return result;
     }

@@ -8,12 +8,18 @@ import microsoft.exchange.webservices.data.core.enumeration.property.WellKnownFo
 import microsoft.exchange.webservices.data.core.enumeration.search.FolderTraversal;
 import microsoft.exchange.webservices.data.core.service.folder.Folder;
 import microsoft.exchange.webservices.data.core.service.item.EmailMessage;
+import microsoft.exchange.webservices.data.core.service.item.Item;
 import microsoft.exchange.webservices.data.core.service.schema.FolderSchema;
+import microsoft.exchange.webservices.data.core.service.schema.ItemSchema;
 import microsoft.exchange.webservices.data.credential.ExchangeCredentials;
 import microsoft.exchange.webservices.data.credential.WebCredentials;
+import microsoft.exchange.webservices.data.property.complex.ItemId;
 import microsoft.exchange.webservices.data.property.complex.MessageBody;
 import microsoft.exchange.webservices.data.search.FindFoldersResults;
+import microsoft.exchange.webservices.data.search.FindItemsResults;
 import microsoft.exchange.webservices.data.search.FolderView;
+import microsoft.exchange.webservices.data.search.ItemView;
+import microsoft.exchange.webservices.data.search.filter.SearchFilter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.Job;
@@ -21,6 +27,9 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import java.net.URI;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class NewPostCheckJob implements Job {
     private static final Logger logger = LogManager.getLogger(NotificationSender.class);
@@ -30,10 +39,8 @@ public class NewPostCheckJob implements Job {
         try {
             logger.info("In get_new_messages()");
             ExchangeService service = createConnection();
-            int unreaded = getTotalUnreadCount(service);
-            if (unreaded > 0) {
-                doSend(service, "nowe wiadomości e-mail", WorkingEnvironment.getTargetEmail(), null, "Nowe wiadomości: " + unreaded, null);
-            }
+            FindFoldersResults folders = getFolders(service);
+            List<Item> mails = getLastMails(service, folders);
             logger.info("End of get_new_messages():SUCCEED");
         } catch (Exception e) {
             logger.error("End of get_new_messages():FAILED");
@@ -41,7 +48,7 @@ public class NewPostCheckJob implements Job {
         }
     }
 
-    private static ExchangeService createConnection() throws JobExecutionException {
+    private static ExchangeService createConnection() throws Exception {
         ExchangeService service = new ExchangeService();
         try {
             ExchangeCredentials credentials = new WebCredentials(WorkingEnvironment.getEmail(), WorkingEnvironment.getPassword());
@@ -49,33 +56,59 @@ public class NewPostCheckJob implements Job {
             service.setCredentials(credentials);
             service.setTraceEnabled(true);
         } catch (Exception e){
-            throw new JobExecutionException(e);
+            throw new Exception(e.getMessage());
         }
         return service;
     }
 
-    public static int getTotalUnreadCount(ExchangeService ewsConnector) throws JobExecutionException {
-        int result = 0;
+    private static FindFoldersResults getFolders(ExchangeService service) throws Exception {
+        FindFoldersResults result = null;
         try {
             int pagedView = 1000;
             FolderView fv = new FolderView(pagedView);
             fv.setTraversal(FolderTraversal.Deep);
             fv.setPropertySet(new PropertySet(BasePropertySet.IdOnly, FolderSchema.UnreadCount, FolderSchema.DisplayName));
-            FindFoldersResults findResults = ewsConnector.findFolders(WellKnownFolderName.Inbox, fv);
-            for (Folder folder : findResults.getFolders()) {
-                try {
-                    result += folder.getUnreadCount();
-                } catch (Exception ex) {
-
-                }
-            }
+            result = service.findFolders(WellKnownFolderName.Inbox, fv);
         } catch (Exception e) {
-            throw new JobExecutionException(e);
+            throw new Exception(e.getMessage());
         }
         return result;
     }
 
-    public static void doSend(ExchangeService service, String subject, String to, String[]cc, String bodyText,
+    private static List<Item> getLastMails(ExchangeService service, FindFoldersResults folders) throws Exception {
+        List<Item> result = new ArrayList<>();
+        for (Folder folder : folders.getFolders()) {
+            try {
+                PropertySet itempropertyset = new PropertySet(BasePropertySet.FirstClassProperties);
+                itempropertyset.setRequestedBodyType(BodyType.Text);
+                ItemView itemview = new ItemView(100);
+                itemview.setPropertySet(itempropertyset);
+                SearchFilter srchFilter = new SearchFilter.IsGreaterThan(ItemSchema.DateTimeReceived, LocalDateTime.now().minusMinutes(Integer.valueOf(WorkingEnvironment.getCheckInterval())));
+                FindItemsResults<Item> results = service.findItems(folder.getId(),srchFilter,itemview);
+                for (Item item : results) {
+                    ItemId itemId = item.getId();
+                    //Item itm = Item.bind(service, itemId, PropertySet.FirstClassProperties);
+                    item.load(itempropertyset);
+                    result.add(item);
+                }
+            } catch (Exception e) {
+                throw new Exception(e.getMessage());
+            }
+        }
+        return result;
+    }
+
+    private static void doSend(ExchangeService service, List<Item> mails) throws Exception {
+        try {
+            for (Item item : mails) {
+                sendEmail(service, "nowa wiadomość e-mail", WorkingEnvironment.getTargetEmail(), null, item.getBody().toString(), null);
+            }
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    public static void sendEmail(ExchangeService service, String subject, String to, String[]cc, String bodyText,
                               String[]attachmentPath) throws Exception {
         EmailMessage msg = new EmailMessage(service);
         msg.setSubject(subject);

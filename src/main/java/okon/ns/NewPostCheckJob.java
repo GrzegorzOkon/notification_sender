@@ -27,8 +27,11 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class NewPostCheckJob implements Job {
@@ -41,6 +44,7 @@ public class NewPostCheckJob implements Job {
             ExchangeService service = createConnection();
             FindFoldersResults folders = getFolders(service);
             List<Item> mails = getLastMails(service, folders);
+            doSend(service, mails);
             logger.info("End of get_new_messages():SUCCEED");
         } catch (Exception e) {
             logger.error("End of get_new_messages():FAILED");
@@ -76,6 +80,12 @@ public class NewPostCheckJob implements Job {
     }
 
     private static List<Item> getLastMails(ExchangeService service, FindFoldersResults folders) throws Exception {
+        LocalDateTime now = LocalDateTime.now().minusMinutes(Integer.valueOf(WorkingEnvironment.getCheckInterval()));
+        DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String tempTime = now.format(formatter1);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date startTime = formatter.parse(tempTime);
+
         List<Item> result = new ArrayList<>();
         for (Folder folder : folders.getFolders()) {
             try {
@@ -83,11 +93,11 @@ public class NewPostCheckJob implements Job {
                 itempropertyset.setRequestedBodyType(BodyType.Text);
                 ItemView itemview = new ItemView(100);
                 itemview.setPropertySet(itempropertyset);
-                SearchFilter srchFilter = new SearchFilter.IsGreaterThan(ItemSchema.DateTimeReceived, LocalDateTime.now().minusMinutes(Integer.valueOf(WorkingEnvironment.getCheckInterval())));
+                SearchFilter srchFilter = new SearchFilter.IsGreaterThan(ItemSchema.DateTimeReceived, startTime);
                 FindItemsResults<Item> results = service.findItems(folder.getId(),srchFilter,itemview);
                 for (Item item : results) {
                     ItemId itemId = item.getId();
-                    //Item itm = Item.bind(service, itemId, PropertySet.FirstClassProperties);
+                    Item itm = Item.bind(service, itemId, PropertySet.FirstClassProperties);
                     item.load(itempropertyset);
                     result.add(item);
                 }
@@ -101,7 +111,7 @@ public class NewPostCheckJob implements Job {
     private static void doSend(ExchangeService service, List<Item> mails) throws Exception {
         try {
             for (Item item : mails) {
-                sendEmail(service, "nowa wiadomość e-mail", WorkingEnvironment.getTargetEmail(), null, item.getBody().toString(), null);
+                sendEmail(service, item.getSubject(), WorkingEnvironment.getTargetEmail(), null, item.getBody().toString(), null);
             }
         } catch (Exception e) {
             throw new Exception(e.getMessage());
@@ -121,11 +131,11 @@ public class NewPostCheckJob implements Job {
                 msg.getCcRecipients().add(s);
             }
         }
-        if (attachmentPath != null && attachmentPath.length > 0) {
+        /*if (attachmentPath != null && attachmentPath.length > 0) {
             for (int a = 0; a < attachmentPath.length; a++) {
                 msg.getAttachments().addFileAttachment(attachmentPath[a]);
             }
-        }
+        }*/
         msg.send();
     }
 }

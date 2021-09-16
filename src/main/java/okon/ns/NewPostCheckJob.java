@@ -80,20 +80,14 @@ public class NewPostCheckJob implements Job {
     }
 
     private static List<Item> getLastMails(ExchangeService service, FindFoldersResults folders) throws Exception {
-        LocalDateTime now = LocalDateTime.now().minusMinutes(Integer.valueOf(WorkingEnvironment.getCheckInterval()));
-        DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String tempTime = now.format(formatter1);
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date startTime = formatter.parse(tempTime);
-
         List<Item> result = new ArrayList<>();
         for (Folder folder : folders.getFolders()) {
             try {
                 PropertySet itempropertyset = new PropertySet(BasePropertySet.FirstClassProperties);
-                itempropertyset.setRequestedBodyType(BodyType.Text);
+                itempropertyset.setRequestedBodyType(BodyType.HTML);
                 ItemView itemview = new ItemView(100);
                 itemview.setPropertySet(itempropertyset);
-                SearchFilter srchFilter = new SearchFilter.IsGreaterThan(ItemSchema.DateTimeReceived, startTime);
+                SearchFilter srchFilter = new SearchFilter.IsGreaterThan(ItemSchema.DateTimeReceived, calculateStartTime());
                 FindItemsResults<Item> results = service.findItems(folder.getId(),srchFilter,itemview);
                 for (Item item : results) {
                     ItemId itemId = item.getId();
@@ -137,5 +131,19 @@ public class NewPostCheckJob implements Job {
             }
         }*/
         msg.send();
+    }
+
+    private static Date calculateStartTime() throws Exception {
+        Date result = null;
+        try {
+            LocalDateTime unformatedStartTime = LocalDateTime.now().minusMinutes(Integer.valueOf(WorkingEnvironment.getCheckInterval()));
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String incompatibleStartTime = unformatedStartTime.format(dtf);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            result = sdf.parse(incompatibleStartTime);
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+        return result;
     }
 }

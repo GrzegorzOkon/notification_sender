@@ -13,6 +13,7 @@ import microsoft.exchange.webservices.data.core.service.schema.FolderSchema;
 import microsoft.exchange.webservices.data.core.service.schema.ItemSchema;
 import microsoft.exchange.webservices.data.credential.ExchangeCredentials;
 import microsoft.exchange.webservices.data.credential.WebCredentials;
+import microsoft.exchange.webservices.data.property.complex.FolderId;
 import microsoft.exchange.webservices.data.property.complex.ItemId;
 import microsoft.exchange.webservices.data.property.complex.MessageBody;
 import microsoft.exchange.webservices.data.search.FindFoldersResults;
@@ -34,6 +35,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static microsoft.exchange.webservices.data.property.complex.FolderId.getFolderIdFromWellKnownFolderName;
+
 public class NewPostCheckJob implements Job {
     private static final Logger logger = LogManager.getLogger(NotificationSender.class);
 
@@ -42,8 +45,8 @@ public class NewPostCheckJob implements Job {
         try {
             logger.info("In get_new_messages()");
             ExchangeService service = createConnection();
-            FindFoldersResults folders = getFolders(service);
-            List<Item> mails = getLastMails(service, folders);
+            List<FolderId> folderIds = getFolderIdentifiers(service);
+            List<Item> mails = getLastMails(service, folderIds);
             doSend(service, mails);
             logger.info("End of get_new_messages():SUCCEED");
         } catch (Exception e) {
@@ -65,30 +68,53 @@ public class NewPostCheckJob implements Job {
         return service;
     }
 
-    private static FindFoldersResults getFolders(ExchangeService service) throws Exception {
-        FindFoldersResults result = null;
+    private static List<FolderId> getFolderIdentifiers(ExchangeService service) throws Exception {
+        logger.debug("In get_folder_identifiers()");
+        List<FolderId> result = new ArrayList();
+        result.add(getFolderIdentifierFromWellKnownFolderName(WellKnownFolderName.Inbox));
+        List<FolderId> childIds = getFolderIdentifiersFromWellKnownFolderNameChildren(service, WellKnownFolderName.Inbox);
+        for (FolderId id : childIds) {
+            result.add(id);
+        }
+        logger.debug("End of get_folder_identifiers():SUCCEED");
+        return result;
+    }
+
+    private static FolderId getFolderIdentifierFromWellKnownFolderName(WellKnownFolderName folderName) {
+        FolderId result = getFolderIdFromWellKnownFolderName(WellKnownFolderName.Inbox);
+        logger.debug("Found folder: " + result.getFolderName() + ", id: " + result.getUniqueId());
+        return result;
+    }
+
+    private static List<FolderId> getFolderIdentifiersFromWellKnownFolderNameChildren(ExchangeService service, WellKnownFolderName folderName) throws Exception {
+        List<FolderId> result = new ArrayList<>();
         try {
-            int pagedView = 1000;
+            int pagedView = 100;
             FolderView fv = new FolderView(pagedView);
             fv.setTraversal(FolderTraversal.Deep);
             fv.setPropertySet(new PropertySet(BasePropertySet.IdOnly, FolderSchema.UnreadCount, FolderSchema.DisplayName));
-            result = service.findFolders(WellKnownFolderName.Inbox, fv);
+            FindFoldersResults folders = service.findFolders(folderName, fv);
+            for (Folder folder : folders.getFolders()) {
+                result.add(folder.getId());
+                logger.debug("Found folder: " + folder.getDisplayName() + ", id: " + folder.getId());
+            }
         } catch (Exception e) {
+            logger.debug("End of get_folder_identifiers():FAILED");
             throw new Exception(e.getMessage());
         }
         return result;
     }
 
-    private static List<Item> getLastMails(ExchangeService service, FindFoldersResults folders) throws Exception {
+    private static List<Item> getLastMails(ExchangeService service, List<FolderId> identifiers) throws Exception {
         List<Item> result = new ArrayList<>();
-        for (Folder folder : folders.getFolders()) {
+        for (FolderId id : identifiers) {
             try {
                 PropertySet itempropertyset = new PropertySet(BasePropertySet.FirstClassProperties);
                 itempropertyset.setRequestedBodyType(BodyType.HTML);
                 ItemView itemview = new ItemView(100);
                 itemview.setPropertySet(itempropertyset);
                 SearchFilter srchFilter = new SearchFilter.IsGreaterThan(ItemSchema.DateTimeReceived, calculateStartTime());
-                FindItemsResults<Item> results = service.findItems(folder.getId(),srchFilter,itemview);
+                FindItemsResults<Item> results = service.findItems(id, srchFilter, itemview);
                 for (Item item : results) {
                     ItemId itemId = item.getId();
                     Item itm = Item.bind(service, itemId, PropertySet.FirstClassProperties);

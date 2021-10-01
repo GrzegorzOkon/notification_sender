@@ -1,6 +1,7 @@
 package okon.ns;
 
 import okon.ns.config.AppConfigReader;
+import okon.ns.config.PerformanceManager;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,11 +59,14 @@ public class NotificationSender {
     public void windowsStop() {}
 
     public void init() throws Exception {
-        Properties properties = AppConfigReader.loadProperties((new File("./settings/program.properties")));
-        WorkingEnvironment.setEnvironment(properties);
+        Properties program = AppConfigReader.loadProperties((new File("./settings/program.properties")));
+        WorkingSettings.setParams(program);
+        Properties performance = PerformanceManager.loadProperties((new File("./settings/performance.properties")));
+        PerformanceSettings.setParams(performance);
         NotificationSender.initLogger();
         NotificationSender.initScheduler();
-        logger.info("Starting " + Version.getVersionInfo() + " [" + WorkingEnvironment.getHostName() + "]");
+        PerformanceSettings.incrementStartCounter();
+        logger.info("Starting " + Version.getVersionInfo() + " [" + WorkingSettings.getHostName() + "]");
         logger.info("using configuration file: './settings/program.properties'");
     }
 
@@ -72,23 +76,23 @@ public class NotificationSender {
                 .addAttribute("pattern", "%6.6pid:%d{yyyyMMdd':'HHmmss.SSS} %m%n");
         if (isLogRotationEnabled()) {
             AppenderComponentBuilder appenderBuilder = builder.newAppender("LogToRollingFile", "RollingFile")
-                    .addAttribute("fileName", WorkingEnvironment.getLogFile())
-                    .addAttribute("filePattern", WorkingEnvironment.getLogFile() + ".old")
+                    .addAttribute("fileName", WorkingSettings.getLogFile())
+                    .addAttribute("filePattern", WorkingSettings.getLogFile() + ".old")
                     .add(layoutBuilder);
             ComponentBuilder triggeringPolicy = builder.newComponent("Policies")
                     .addComponent(builder.newComponent("SizeBasedTriggeringPolicy")
-                            .addAttribute("size", WorkingEnvironment.getLogFileSize() + "MB"));
+                            .addAttribute("size", WorkingSettings.getLogFileSize() + "MB"));
             appenderBuilder.addComponent(triggeringPolicy);
             builder.add(appenderBuilder);
-            RootLoggerComponentBuilder rootLogger = builder.newRootLogger(Level.values()[WorkingEnvironment.getDebugLevel()]);
+            RootLoggerComponentBuilder rootLogger = builder.newRootLogger(Level.values()[WorkingSettings.getDebugLevel()]);
             rootLogger.add(builder.newAppenderRef("LogToRollingFile"));
             builder.add(rootLogger);
         } else {
             AppenderComponentBuilder appenderBuilder = builder.newAppender("LogToFile", "File")
-                    .addAttribute("fileName", WorkingEnvironment.getLogFile())
+                    .addAttribute("fileName", WorkingSettings.getLogFile())
                     .add(layoutBuilder);
             builder.add(appenderBuilder);
-            RootLoggerComponentBuilder rootLogger = builder.newRootLogger(Level.values()[WorkingEnvironment.getDebugLevel()]);
+            RootLoggerComponentBuilder rootLogger = builder.newRootLogger(Level.values()[WorkingSettings.getDebugLevel()]);
             rootLogger.add(builder.newAppenderRef("LogToFile"));
             builder.add(rootLogger);
         }
@@ -104,7 +108,7 @@ public class NotificationSender {
 
     private static Trigger createTrigger() {
         Trigger result = TriggerBuilder.newTrigger().withIdentity("CHECKING POST TRIGGER", "NEW POST CHECK")
-                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(Integer.valueOf(WorkingEnvironment.getCheckInterval())).repeatForever())
+                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(Integer.valueOf(WorkingSettings.getCheckInterval())).repeatForever())
                 .build();
         return result;
     }
@@ -115,7 +119,7 @@ public class NotificationSender {
     }
 
     private static boolean isLogRotationEnabled() {
-        if (Integer.valueOf(WorkingEnvironment.getLogFileSize()) != 0)
+        if (Integer.valueOf(WorkingSettings.getLogFileSize()) != 0)
             return true;
         return false;
     }

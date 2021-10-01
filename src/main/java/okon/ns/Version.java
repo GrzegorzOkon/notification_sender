@@ -1,11 +1,11 @@
 package okon.ns;
 
 public class Version {
-    private static String name = WorkingEnvironment.getAppName();
+    private static String name = WorkingSettings.getAppName();
     private static int major = 1;
-    private static int minor = 0;
-    private static int realase = 16;
-    private static String revision = "28 September 2021";
+    private static int minor = 1;
+    private static int realase = 0;
+    private static String revision = "01 October 2021";
     private static String author = "Grzegorz Okon";
     private static String license = "GPLv2. This is free software.";
 

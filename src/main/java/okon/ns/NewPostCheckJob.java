@@ -58,8 +58,8 @@ public class NewPostCheckJob implements Job {
     private static ExchangeService createConnection() throws Exception {
         ExchangeService service = new ExchangeService();
         try {
-            ExchangeCredentials credentials = new WebCredentials(WorkingEnvironment.getEmail(), WorkingEnvironment.getPassword());
-            service.setUrl(new URI(WorkingEnvironment.getServer()));
+            ExchangeCredentials credentials = new WebCredentials(WorkingSettings.getEmail(), WorkingSettings.getPassword());
+            service.setUrl(new URI(WorkingSettings.getServer()));
             service.setCredentials(credentials);
             service.setTraceEnabled(true);
         } catch (Exception e){
@@ -131,7 +131,7 @@ public class NewPostCheckJob implements Job {
     private static void doSend(ExchangeService service, List<Item> mails) throws Exception {
         try {
             for (Item item : mails) {
-                sendEmail(service, item.getSubject(), WorkingEnvironment.getTargetEmail(), null, item.getBody().toString(), null);
+                sendEmail(service, item.getSubject(), WorkingSettings.getTargetEmail(), null, item.getBody().toString(), null);
             }
         } catch (Exception e) {
             throw new Exception(e.getMessage());
@@ -162,7 +162,7 @@ public class NewPostCheckJob implements Job {
     private static Date calculateStartTime() throws Exception {
         Date result = null;
         try {
-            LocalDateTime unformatedStartTime = LocalDateTime.now().minusMinutes(Integer.valueOf(WorkingEnvironment.getCheckInterval()));
+            LocalDateTime unformatedStartTime = LocalDateTime.now().minusMinutes(Integer.valueOf(WorkingSettings.getCheckInterval()));
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             String incompatibleStartTime = unformatedStartTime.format(dtf);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

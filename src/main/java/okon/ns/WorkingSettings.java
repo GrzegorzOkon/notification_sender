@@ -29,11 +29,21 @@ public class WorkingSettings {
         if (parameters.containsKey("CheckInterval")) {
             settings.setProperty("CheckInterval", parameters.getProperty("CheckInterval"));
         }
+        if (parameters.containsKey("ReadedFilter")) {
+            settings.setProperty("ReadedFilter", checkReadedFilter(parameters));
+        }
         if (parameters.containsKey("TargetEmail")) {
             settings.setProperty("TargetEmail", parameters.getProperty("TargetEmail"));
         }
         settings.setProperty("AppName", checkJarFileName());
         settings.setProperty("HostName", checkHostName());
+    }
+
+    private static String checkReadedFilter(Properties parameters) {
+        if (parameters.getProperty("ReadedFilter").equals("0")) {
+            return "false";
+        } else
+            return "true";
     }
 
     private static String checkJarFileName() {
@@ -67,6 +77,8 @@ public class WorkingSettings {
     public static String getPassword() { return settings.getProperty("Password"); }
 
     public static String getCheckInterval() { return settings.getProperty("CheckInterval", "10"); }
+
+    public static String getReadedFilter() { return settings.getProperty("ReadedFilter", "false"); }
 
     public static String getTargetEmail() { return settings.getProperty("TargetEmail"); }
 

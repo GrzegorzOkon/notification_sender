@@ -6,9 +6,11 @@ import microsoft.exchange.webservices.data.core.enumeration.property.BasePropert
 import microsoft.exchange.webservices.data.core.enumeration.property.BodyType;
 import microsoft.exchange.webservices.data.core.enumeration.property.WellKnownFolderName;
 import microsoft.exchange.webservices.data.core.enumeration.search.FolderTraversal;
+import microsoft.exchange.webservices.data.core.enumeration.search.LogicalOperator;
 import microsoft.exchange.webservices.data.core.service.folder.Folder;
 import microsoft.exchange.webservices.data.core.service.item.EmailMessage;
 import microsoft.exchange.webservices.data.core.service.item.Item;
+import microsoft.exchange.webservices.data.core.service.schema.EmailMessageSchema;
 import microsoft.exchange.webservices.data.core.service.schema.FolderSchema;
 import microsoft.exchange.webservices.data.core.service.schema.ItemSchema;
 import microsoft.exchange.webservices.data.credential.ExchangeCredentials;
@@ -107,14 +109,14 @@ public class NewPostCheckJob implements Job {
 
     private static List<Item> getLastMails(ExchangeService service, List<FolderId> identifiers) throws Exception {
         List<Item> result = new ArrayList<>();
+        SearchFilter sf = setFilters();
         for (FolderId id : identifiers) {
             try {
                 PropertySet itempropertyset = new PropertySet(BasePropertySet.FirstClassProperties);
                 itempropertyset.setRequestedBodyType(BodyType.HTML);
                 ItemView itemview = new ItemView(100);
                 itemview.setPropertySet(itempropertyset);
-                SearchFilter srchFilter = new SearchFilter.IsGreaterThan(ItemSchema.DateTimeReceived, calculateStartTime());
-                FindItemsResults<Item> results = service.findItems(id, srchFilter, itemview);
+                FindItemsResults<Item> results = service.findItems(id, sf, itemview);
                 for (Item item : results) {
                     ItemId itemId = item.getId();
                     Item itm = Item.bind(service, itemId, PropertySet.FirstClassProperties);
@@ -124,6 +126,37 @@ public class NewPostCheckJob implements Job {
             } catch (Exception e) {
                 throw new Exception(e.getMessage());
             }
+        }
+        return result;
+    }
+
+    private static SearchFilter setFilters() throws Exception {
+        SearchFilter result = null;
+        try {
+            if (WorkingSettings.getReadedFilter().equals("true")) {
+                result = new SearchFilter.SearchFilterCollection(LogicalOperator.And, new SearchFilter[]{
+                    new SearchFilter.IsEqualTo(EmailMessageSchema.IsRead, false),
+                    new SearchFilter.IsGreaterThan(ItemSchema.DateTimeReceived, calculateStartTime())});
+            } else {
+                result = new SearchFilter.SearchFilterCollection(LogicalOperator.And, new SearchFilter[]{
+                    new SearchFilter.IsGreaterThan(ItemSchema.DateTimeReceived, calculateStartTime())});
+            }
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+        return result;
+    }
+
+    private static Date calculateStartTime() throws Exception {
+        Date result = null;
+        try {
+            LocalDateTime unformatedStartTime = LocalDateTime.now().minusMinutes(Integer.valueOf(WorkingSettings.getCheckInterval()));
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String incompatibleStartTime = unformatedStartTime.format(dtf);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            result = sdf.parse(incompatibleStartTime);
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
         }
         return result;
     }
@@ -157,19 +190,5 @@ public class NewPostCheckJob implements Job {
             }
         }*/
         msg.send();
-    }
-
-    private static Date calculateStartTime() throws Exception {
-        Date result = null;
-        try {
-            LocalDateTime unformatedStartTime = LocalDateTime.now().minusMinutes(Integer.valueOf(WorkingSettings.getCheckInterval()));
-            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            String incompatibleStartTime = unformatedStartTime.format(dtf);
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            result = sdf.parse(incompatibleStartTime);
-        } catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
-        return result;
     }
 }

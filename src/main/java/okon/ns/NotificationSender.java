@@ -19,6 +19,11 @@ public class NotificationSender {
     private static NotificationSender notificationSenderInstance = new NotificationSender();
     private static Scheduler NewPostChecker;
 
+    static {
+        Thread closeApp = new Thread(() -> windowsStop());
+        Runtime.getRuntime().addShutdownHook(closeApp);
+    }
+
     public static void main(String[] args) {
         String cmd = "start";
         if (args.length > 0) {
@@ -56,7 +61,10 @@ public class NotificationSender {
         }
     }
 
-    public void windowsStop() {}
+    public static void windowsStop() {
+        PerformanceManager.saveProperties(new File("./settings/performance.properties"));
+        //logger.info(Version.getName() + " stopped. " + Version.getVersionInfo());
+    }
 
     public void init() throws Exception {
         Properties program = AppConfigReader.loadProperties((new File("./settings/program.properties")));

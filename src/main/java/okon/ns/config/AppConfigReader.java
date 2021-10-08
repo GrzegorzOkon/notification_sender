@@ -10,8 +10,8 @@ import java.util.Properties;
 public class AppConfigReader {
     public static Properties loadProperties(File file) {
         Properties result = new Properties();
-        try {
-            result.load(new FileInputStream(file));
+        try (FileInputStream input = new FileInputStream(file)){
+            result.load(input);
             validate(result);
         } catch (Exception e) {
             throw new ConfigurationException(e.getMessage());

@@ -127,6 +127,7 @@ public class NewPostCheckJob implements Job {
                 throw new Exception(e.getMessage());
             }
         }
+        PerformanceSettings.actualizeCheckTime();
         return result;
     }
 

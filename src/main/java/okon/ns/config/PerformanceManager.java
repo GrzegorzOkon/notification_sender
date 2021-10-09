@@ -29,10 +29,10 @@ public class PerformanceManager {
     }
 
     public static void validate(Properties properties) {
-        validateAmountOfStarts(properties);
+        validateNumberOfStarts(properties);
     }
 
-    public static void validateAmountOfStarts(Properties properties) {
+    public static void validateNumberOfStarts(Properties properties) {
         if (properties.containsKey("number_of.starts") && (isWrongFormat(properties, "number_of.starts")
                 || isOutOfRange(properties, "number_of.starts"))) {
             System.exit(201);

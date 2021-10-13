@@ -1,7 +1,9 @@
 package okon.ns;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Properties;
 
 public class PerformanceSettings {
@@ -28,8 +30,42 @@ public class PerformanceSettings {
 
     public static void actualizeCheckTime() {
         LocalDateTime checkTime = LocalDateTime.now();
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss");
         settings.setProperty("last.check.time", checkTime.format(dtf));
+    }
+
+    public static Date calculateStartTime() throws Exception {
+        Date result = null;
+        try {
+            LocalDateTime unformatedStartTime = LocalDateTime.now().plusMinutes(Integer.valueOf(WorkingSettings.getCheckInterval()));
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss");
+            String incompatibleStartTime = unformatedStartTime.format(dtf);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
+            result = sdf.parse(incompatibleStartTime);
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+        return result;
+    }
+
+    public static Date calculateCheckTime() throws Exception {
+        Date result = null;
+        try {
+            if (getLastCheckTime().equals("")) {
+                LocalDateTime unformatedStartTime = LocalDateTime.now().minusMinutes(Integer.valueOf(WorkingSettings.getCheckInterval()));
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss");
+                String incompatibleStartTime = unformatedStartTime.format(dtf);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
+                result = sdf.parse(incompatibleStartTime);
+            } else {
+                String incompatibleStartTime = getLastCheckTime();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
+                result = sdf.parse(incompatibleStartTime);
+            }
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+        return result;
     }
 
     public static Properties getSettings() {

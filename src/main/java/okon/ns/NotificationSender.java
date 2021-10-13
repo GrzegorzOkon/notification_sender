@@ -114,10 +114,16 @@ public class NotificationSender {
         scheduleJob(trigger);
     }
 
-    private static Trigger createTrigger() {
-        Trigger result = TriggerBuilder.newTrigger().withIdentity("CHECKING POST TRIGGER", "NEW POST CHECK")
-                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(Integer.valueOf(WorkingSettings.getCheckInterval())).repeatForever())
-                .build();
+    private static Trigger createTrigger() throws Exception {
+        Trigger result = null;
+        try {
+            result = TriggerBuilder.newTrigger().withIdentity("CHECKING POST TRIGGER", "NEW POST CHECK")
+                    .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(Integer.valueOf(WorkingSettings.getCheckInterval())).repeatForever())
+                    .startAt(PerformanceSettings.calculateStartTime())
+                    .build();
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
         return result;
     }
 

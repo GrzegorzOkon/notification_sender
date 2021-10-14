@@ -4,8 +4,8 @@ public class Version {
     private static String name = "Notification Sender";
     private static int major = 1;
     private static int minor = 1;
-    private static int realase = 4;
-    private static String revision = "13 October 2021";
+    private static int realase = 5;
+    private static String revision = "14 October 2021";
     private static String author = "Grzegorz Okon";
     private static String license = "GPLv2. This is free software.";
 

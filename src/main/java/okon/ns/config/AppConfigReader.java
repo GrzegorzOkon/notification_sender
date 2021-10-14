@@ -26,6 +26,7 @@ public class AppConfigReader {
         validateServer(properties);
         validateEmail(properties);
         validatePassword(properties);
+        validatePasswordEncryption(properties);
         validateCheckInterval(properties);
         validateReadedFilter(properties);
         validateTargetEmail(properties);
@@ -69,23 +70,30 @@ public class AppConfigReader {
         }
     }
 
+    public static void validatePasswordEncryption(Properties properties) {
+        if (properties.containsKey("PasswordEncryption") && (isWrongFormat(properties, "PasswordEncryption")
+                || isOutOfRange(properties, "PasswordEncryption"))) {
+            System.exit(107);
+        }
+    }
+
     public static void validateCheckInterval(Properties properties) {
         if (properties.containsKey("CheckInterval") && (isWrongFormat(properties, "CheckInterval")
                 || isOutOfRange(properties, "CheckInterval"))) {
-            System.exit(107);
+            System.exit(108);
         }
     }
 
     public static void validateReadedFilter(Properties properties) {
         if (properties.containsKey("ReadedFilter") && (isWrongFormat(properties, "ReadedFilter")
                 || isOutOfRange(properties, "ReadedFilter"))) {
-            System.exit(108);
+            System.exit(109);
         }
     }
 
     public static void validateTargetEmail(Properties properties) {
         if (!properties.containsKey("TargetEmail") || isWrongFormat(properties, "TargetEmail")) {
-            System.exit(109);
+            System.exit(110);
         }
     }
 
@@ -96,7 +104,8 @@ public class AppConfigReader {
             } catch (IOException e) {
                 return true;
             }
-        } else if (key.equals("LogFileSize") || key.equals("DebugLevel") || key.equals("CheckInterval") || key.equals("ReadedFilter")) {
+        } else if (key.equals("LogFileSize") || key.equals("DebugLevel") || key.equals("CheckInterval") || key.equals("ReadedFilter")
+                || key.equals("PasswordEncryption")) {
             try {
                 Integer.parseInt(properties.getProperty(key));
             } catch (NumberFormatException e) {
@@ -118,6 +127,9 @@ public class AppConfigReader {
                 return true;
         } else if (key.equals("UnreadedFilter") && (Integer.valueOf(properties.getProperty("ReadedFilter")).intValue() < 0
                 || Integer.valueOf(properties.getProperty("ReadedFilter")).intValue() > 1)){
+            return true;
+        } else if (key.equals("PasswordEncryption") && (Integer.valueOf(properties.getProperty("PasswordEncryption")).intValue() < 0
+                || Integer.valueOf(properties.getProperty("PasswordEncryption")).intValue() > 1)) {
             return true;
         }
         return false;

@@ -1,5 +1,7 @@
 package okon.ns;
 
+import okon.ns.security.HexDecryptor;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
@@ -26,6 +28,9 @@ public class WorkingSettings {
         if (parameters.containsKey("Password")) {
             settings.setProperty("Password", parameters.getProperty("Password"));
         }
+        if (parameters.containsKey("PasswordEncryption")) {
+            settings.setProperty("PasswordEncryption", checkPassword(parameters));
+        }
         if (parameters.containsKey("CheckInterval")) {
             settings.setProperty("CheckInterval", parameters.getProperty("CheckInterval"));
         }
@@ -37,6 +42,21 @@ public class WorkingSettings {
         }
         settings.setProperty("AppName", checkJarFileName());
         settings.setProperty("HostName", checkHostName());
+    }
+
+    private static String checkPassword(Properties parameters) {
+        if (parameters.getProperty("PasswordEncryption").equals("0")) {
+            return "none";
+        } else
+            return "hex";
+    }
+
+    private static boolean isPasswordEncrypted() {
+        if (settings.getProperty("PasswordEncryption", "none").equals("none")) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     private static String checkReadedFilter(Properties parameters) {
@@ -62,9 +82,7 @@ public class WorkingSettings {
         return result;
     }
 
-    public static String getLogFile() {
-        return settings.getProperty("LogFile", "./" + getAppName() + ".log");
-    }
+    public static String getLogFile() { return settings.getProperty("LogFile", "./" + getAppName() + ".log");}
 
     public static String getLogFileSize() { return settings.getProperty("LogFileSize", "1"); }
 
@@ -74,7 +92,13 @@ public class WorkingSettings {
 
     public static String getEmail() { return settings.getProperty("Email"); }
 
-    public static String getPassword() { return settings.getProperty("Password"); }
+    public static String getPassword() {
+        if (isPasswordEncrypted()) {
+            return HexDecryptor.convert(settings.getProperty("Password"));
+        } else {
+            return settings.getProperty("Password");
+        }
+    }
 
     public static String getCheckInterval() { return settings.getProperty("CheckInterval", "10"); }
 
@@ -82,9 +106,7 @@ public class WorkingSettings {
 
     public static String getTargetEmail() { return settings.getProperty("TargetEmail"); }
 
-    public static String getAppName() {
-        return settings.getProperty("AppName");
-    }
+    public static String getAppName() {return settings.getProperty("AppName");}
 
     public static String getHostName() { return settings.getProperty("HostName"); }
 }
